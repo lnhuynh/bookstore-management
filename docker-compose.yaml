@@ -1,0 +1,7 @@
+version: "3"
+services:
+  bookstore:
+    build: .
+    container_name: bookstore-management-container
+    ports:
+      - '8000:8000'
