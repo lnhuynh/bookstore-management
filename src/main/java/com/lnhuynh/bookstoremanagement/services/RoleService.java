@@ -26,6 +26,4 @@ public record RoleService(RoleRepository roleRepository, ModelMapper modelMapper
     RoleCreateResponseDTO roleResponse = modelMapper.map(role, RoleCreateResponseDTO.class); // test model mapper
     return new ResponseEntity<RoleCreateResponseDTO>(roleResponse, headers, HttpStatus.CREATED);
   }
-
-
 }

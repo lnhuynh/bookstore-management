@@ -19,4 +19,8 @@ public class Role {
 
   @ManyToMany(mappedBy = "roleList", fetch = FetchType.LAZY)
   private List<Account> accountList;
+
+  public Role(String roleName) {
+    this.roleName = roleName;
+  }
 }

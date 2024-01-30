@@ -62,11 +62,12 @@ public class SecurityConfig {
       .clientId("4a966f061d96b0a342be")
       .clientSecret("d9fd667b73c3630c82312b909aaa6cdb594b2bef")
       .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-      .redirectUri(String.format("%s/auth/oauth2/github/code", BASE_URL))
+      .redirectUri(String.format("%s/login/oauth2/code/github", BASE_URL))
       .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
       .authorizationUri("https://github.com/login/oauth/authorize")
       .tokenUri("https://github.com/login/oauth/access_token")
       .userInfoUri("https://api.github.com/user")
+      .userNameAttributeName("login")
       .clientName("GitHub")
       .build();
   }
