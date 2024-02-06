@@ -4,16 +4,20 @@ import com.lnhuynh.bookstoremanagement.constants.RoleName;
 import com.lnhuynh.bookstoremanagement.domain.Account;
 import com.lnhuynh.bookstoremanagement.domain.Role;
 import com.lnhuynh.bookstoremanagement.repositories.AccountRepository;
+import com.lnhuynh.bookstoremanagement.services.AccountService;
+import com.lnhuynh.bookstoremanagement.utils.JwtProvider;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
@@ -30,12 +34,18 @@ import static com.lnhuynh.bookstoremanagement.constants.Platform.*;
 @RequiredArgsConstructor
 @Slf4j
 public class OAuth2SuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
-  private final AccountRepository accountRepository;
+//  private final AccountRepository accountRepository;
+//  private final AccountService accountService;
+//  private final PasswordEncoder passwordEncoder;
+  private final ApplicationContext context;
+  private final JwtProvider jwtProvider;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws ServletException, IOException {
     OAuth2AuthenticationToken oAuth2AuthenticationToken = (OAuth2AuthenticationToken) authentication;
     String authorizedClientRegistrationId = oAuth2AuthenticationToken.getAuthorizedClientRegistrationId();
+    PasswordEncoder passwordEncoder = context.getBean(PasswordEncoder.class);
+    AccountRepository accountRepository = context.getBean(AccountRepository.class);
     switch (authorizedClientRegistrationId) {
       case GITHUB -> {
         Map<String, Object> attributes = oAuth2AuthenticationToken.getPrincipal().getAttributes();
@@ -50,14 +60,15 @@ public class OAuth2SuccessHandler extends SavedRequestAwareAuthenticationSuccess
             roleList.add(new Role(RoleName.ADMIN));
             Account newAccount = Account.builder()
               .username(username)
-              .password(password)
+              .password(passwordEncoder.encode(password))
               .roleList(roleList)
               .build();
             accountRepository.save(newAccount);
             setSecurityContextHolder(newAccount, attributes, authorizedClientRegistrationId);
           }
         );
-        ResponseCookie springCookie = ResponseCookie.from("jwtToken", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c")
+        String token = jwtProvider.generateToken(authentication);
+        ResponseCookie springCookie = ResponseCookie.from("jwtToken", token)
           .httpOnly(true)
           .secure(false)
           .path("/")
@@ -82,7 +93,7 @@ public class OAuth2SuccessHandler extends SavedRequestAwareAuthenticationSuccess
     account.getRoleList().forEach(role -> {
       authorities.add(new SimpleGrantedAuthority(role.getRoleName()));
     });
-    DefaultOAuth2User newUser = new DefaultOAuth2User(authorities, attributes, "login");
+    DefaultOAuth2User newUser = new DefaultOAuth2User(authorities, attributes, "id");
     Authentication newAuthentication = new OAuth2AuthenticationToken(newUser, authorities, authorizedClientRegistrationId);
     SecurityContextHolder.getContext().setAuthentication(newAuthentication);
   }

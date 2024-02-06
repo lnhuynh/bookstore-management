@@ -8,6 +8,7 @@ import com.lnhuynh.bookstoremanagement.exceptions.DuplicateUsernameException;
 import com.lnhuynh.bookstoremanagement.exceptions.InvalidRoleException;
 import com.lnhuynh.bookstoremanagement.repositories.AccountRepository;
 import com.lnhuynh.bookstoremanagement.repositories.RoleRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,8 +17,12 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public record AccountService(AccountRepository accountRepository, PasswordEncoder passwordEncoder,
-                             RoleRepository roleRepository) {
+@RequiredArgsConstructor
+public class AccountService {
+  private final AccountRepository accountRepository;
+  private final PasswordEncoder passwordEncoder;
+  private final RoleRepository roleRepository;
+
   public String signUp(AccountCreateRequestDTO accountInfo) {
     Optional<Account> duplicateAccount = accountRepository.findByUsername(accountInfo.getUsername());
     List<Role> roleList = new ArrayList<>();

@@ -5,14 +5,21 @@ import com.lnhuynh.bookstoremanagement.dtos.RoleCreateRequestDTO;
 import com.lnhuynh.bookstoremanagement.dtos.RoleCreateResponseDTO;
 import com.lnhuynh.bookstoremanagement.exceptions.DuplicateRoleException;
 import com.lnhuynh.bookstoremanagement.repositories.RoleRepository;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 @Service
-public record RoleService(RoleRepository roleRepository, ModelMapper modelMapper) {
+@RequiredArgsConstructor
+public class RoleService {
+  private final RoleRepository roleRepository;
+  private final ModelMapper modelMapper;
 
   public ResponseEntity<RoleCreateResponseDTO> addRole(RoleCreateRequestDTO roleInfo) {
     Optional<Role> duplicateRole = roleRepository.findByRoleName(roleInfo.getRoleName());

@@ -9,10 +9,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +24,7 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -74,14 +77,26 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    return http.csrf(AbstractHttpConfigurer::disable)
+    http.csrf(AbstractHttpConfigurer::disable)
       .authorizeHttpRequests(authorize -> authorize
-        .requestMatchers(HttpMethod.GET, "/hello").permitAll()
+        .requestMatchers(HttpMethod.GET, "/hello", "/logout").permitAll()
         .requestMatchers(HttpMethod.POST, "/auth/sign-up", "/role/create").permitAll()
       )
       .authorizeHttpRequests(authorize -> authorize.requestMatchers("/book/**").authenticated())
-      .oauth2Login(oauth2Login -> oauth2Login.successHandler(oAuth2SuccessHandler))
-//      .formLogin(formLogin -> formLogin.defaultSuccessUrl("/book"))
-      .build();
+      .formLogin(formLogin -> formLogin.defaultSuccessUrl("/book"))
+      .oauth2Login(oauth2Login -> oauth2Login.successHandler(oAuth2SuccessHandler));
+//      .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+//      .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+//      .logout(logout -> logout
+//        .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
+//        .logoutSuccessUrl("http://localhost:3000")
+//        .deleteCookies("jwtToken")
+//        .clearAuthentication(true)
+//        .invalidateHttpSession(true)
+//        .permitAll()
+//      )
+//      .httpBasic(Customizer.withDefaults());
+//    http.headers().frameOptions().disable();
+      return http.build();
   }
 }
